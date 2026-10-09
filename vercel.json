@@ -1,0 +1,9 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/receitas", "destination": "/receitas/index.html" },
+    { "source": "/receitas/", "destination": "/receitas/index.html" },
+    { "source": "/receitas/checkout", "destination": "/receitas/pages/checkout.html" }
+  ]
+}
