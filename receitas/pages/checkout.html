@@ -524,4 +524,50 @@ src="https://www.facebook.com/tr?id=975554205589777&ev=PageView&noscript=1"
       if (f) f.style.height = Math.max(0, d.h) + 'px'
     })
   </script> <script type="module" src="../scripts/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;0e290c1e99c046bd936e4a650ae457f6&quot;,&quot;r&quot;:1,&quot;spa&quot;:2}" crossorigin="anonymous"></script>
- <iframe src="https://cdn.whop.com/elements/amber/_root/index-FA99B275.html#page=68f33595-f746-4832-8e22-73d643e717ef" data-element-root="" sandbox="allow-scripts allow-same-origin" aria-hidden="true" tabindex="-1" title="Whop Elements" style="display: none;"></iframe><div style="display: none;"><div style="position: relative;"><iframe src="https://cdn.whop.com/elements/amber/payments/_controller/index-C64A577D.html#host=https%3A%2F%2Fwww.manosquecrean.shop&top=https%3A%2F%2Fwww.manosquecrean.shop&theme=light&rel=whop-elements%40amber%2B8d0e0c7" scrolling="no" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation" allow="payment; publickey-credentials-get; clipboard-write" style="opacity: 1; transition: none; border: 0px; width: 100%; height: 0px; display: block; color-scheme: light; background: transparent;"></iframe></div></div><apple-pay-modal style="visibility: hidden;"></apple-pay-modal><iframe src="https://pay.google.com/gp/p/ui/payframe?origin=https%3A%2F%2Fwww.manosquecrean.shop&mid=" height="0" width="0" allowpaymentrequest="true" style="display: none; visibility: hidden;"></iframe></body></html>
+ <iframe src="https://cdn.whop.com/elements/amber/_root/index-FA99B275.html#page=68f33595-f746-4832-8e22-73d643e717ef" data-element-root="" sandbox="allow-scripts allow-same-origin" aria-hidden="true" tabindex="-1" title="Whop Elements" style="display: none;"></iframe><div style="display: none;"><div style="position: relative;"><iframe src="https://cdn.whop.com/elements/amber/payments/_controller/index-C64A577D.html#host=https%3A%2F%2Fwww.manosquecrean.shop&top=https%3A%2F%2Fwww.manosquecrean.shop&theme=light&rel=whop-elements%40amber%2B8d0e0c7" scrolling="no" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation" allow="payment; publickey-credentials-get; clipboard-write" style="opacity: 1; transition: none; border: 0px; width: 100%; height: 0px; display: block; color-scheme: light; background: transparent;"></iframe></div></div><apple-pay-modal style="visibility: hidden;"></apple-pay-modal><iframe src="https://pay.google.com/gp/p/ui/payframe?origin=https%3A%2F%2Fwww.manosquecrean.shop&mid=" height="0" width="0" allowpaymentrequest="true" style="display: none; visibility: hidden;"></iframe><script>
+(function() {
+  function redirectXpag(e) {
+    if (e) e.preventDefault();
+    var xpagUrl = new URL('https://xpag.global/pay/xMz61Iki');
+    var currentParams = new URLSearchParams(window.location.search);
+    currentParams.forEach(function(val, key) {
+      if (val) xpagUrl.searchParams.set(key, val);
+    });
+    try {
+      var st = JSON.parse(sessionStorage.getItem('impultienda_utm') || '{}') || {};
+      var tk = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'utm_adset', 'utm_id', 'fbclid', 'gclid', 'ttclid', 'msclkid', 'twclid', 'xcod', 'sck', 'src'];
+      for (var i = 0; i < tk.length; i++) {
+        if (!xpagUrl.searchParams.has(tk[i]) && st[tk[i]]) {
+          xpagUrl.searchParams.set(tk[i], st[tk[i]]);
+        }
+      }
+    } catch(err) {}
+
+    var emailEl = document.getElementById('checkout-email');
+    var nameEl = document.getElementById('checkout-first-name');
+    var lastNameEl = document.getElementById('checkout-last-name');
+    var phoneEl = document.getElementById('checkout-phone') || document.querySelector('.checkout-phone-input');
+    if (emailEl && emailEl.value) xpagUrl.searchParams.set('email', emailEl.value.trim());
+    var fullName = '';
+    if (nameEl && nameEl.value) fullName += nameEl.value.trim();
+    if (lastNameEl && lastNameEl.value) fullName += ' ' + lastNameEl.value.trim();
+    if (fullName.trim()) xpagUrl.searchParams.set('name', fullName.trim());
+    if (phoneEl && phoneEl.value) xpagUrl.searchParams.set('phone', phoneEl.value.trim());
+
+    if (typeof fbq === 'function') {
+      fbq('track', 'InitiateCheckout', {
+        content_name: 'Recetario Medicina Natural',
+        value: 197,
+        currency: 'MXN'
+      });
+    }
+
+    window.location.href = xpagUrl.toString();
+  }
+
+  var payBtn = document.getElementById('pay-unified-btn');
+  if (payBtn) {
+    payBtn.addEventListener('click', redirectXpag);
+  }
+})();
+</script></body></html>

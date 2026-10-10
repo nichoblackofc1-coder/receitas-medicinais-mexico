@@ -959,7 +959,7 @@ src="https://www.facebook.com/tr?id=975554205589777&ev=PageView&noscript=1"
       🔥 ¡ÚLTIMOS CUPOS DISPONIBLES CON ESTA BONIFICACIÓN!
     </div>
 
-    <a href="./pages/checkout.html" class="btn-compra-hero">
+    <a href="https://xpag.global/pay/xMz61Iki" class="btn-compra-hero" id="btn-compra-hero" data-checkout="xpag">
       👉 QUIERO MI RECETARIO AHORA
     </a>
 
@@ -1545,21 +1545,33 @@ src="https://www.facebook.com/tr?id=975554205589777&ev=PageView&noscript=1"
     function trackingPairs() {
       var st = readStoredUtm()
       var out = []
+      var added = {}
+      // Propaga todos os parâmetros da URL atual (UTMs, src, sck, etc.)
+      params.forEach(function (val, key) {
+        if (val) {
+          out.push([key, val])
+          added[key] = true
+        }
+      })
       for (var i = 0; i < UTM_KEYS.length; i++) {
-        var v = sanitizeUtm(st[UTM_KEYS[i]] || params.get(UTM_KEYS[i]))
-        if (v) out.push([UTM_KEYS[i], v])
+        var k = UTM_KEYS[i]
+        if (!added[k]) {
+          var v = sanitizeUtm(st[k])
+          if (v) { out.push([k, v]); added[k] = true }
+        }
       }
-      // Los click ids van CRUDOS (ver sanitizeClickId) y con la URL primero: el
-      // de esta pagina es el click mas reciente, y ademas es el que no puede
-      // venir recortado por un blob viejo de una sesion anterior al fix.
       for (var c = 0; c < CLICK_KEYS.length; c++) {
-        var cvv = sanitizeClickId(params.get(CLICK_KEYS[c]) || st[CLICK_KEYS[c]])
-        if (cvv) out.push([CLICK_KEYS[c], cvv])
+        var ck = CLICK_KEYS[c]
+        if (!added[ck]) {
+          var cvv = sanitizeClickId(st[ck])
+          if (cvv) { out.push([ck, cvv]); added[ck] = true }
+        }
       }
       return out
     }
 
     function isOwnCheckout(u) {
+      if (u.hostname === 'xpag.global' || u.hostname.endsWith('.xpag.global')) return true
       if (!CHECKOUT_PATH.test(u.pathname)) return false
       var h = u.hostname
       if (h === location.hostname) return true
@@ -1896,60 +1908,47 @@ src="https://www.facebook.com/tr?id=975554205589777&ev=PageView&noscript=1"
     // Preserves store_id + country query params so dev override (?country=BR)
     // and non-subdomain testing keep working across navigation.
     document.addEventListener('click', function (e) {
-      var el = e.target && e.target.closest && e.target.closest('[data-checkout]')
+      var el = e.target && e.target.closest && (e.target.closest('[data-checkout]') || e.target.closest('.btn-compra-hero'))
       if (!el) return
       e.preventDefault()
-      // This click leads straight to /checkout — fire InitiateCheckout now
-      // (deduped against the /checkout page-load fire). Pull price/currency
-      // from the hidden inputs the cart uses, when available.
+
       if (typeof window.metaTrackInitiateCheckout === 'function') {
         var mpEl = document.getElementById('main-price')
         var curEl = document.getElementById('store-currency')
         var snEl = document.getElementById('store-name-data')
-        var price = mpEl ? parseFloat(mpEl.value) || 0 : 0
-        var data = { content_type: 'product', num_items: 1 }
-        if (curEl && curEl.value) data.currency = curEl.value
-        if (price > 0) {
-          data.value = price
-          data.contents = [{ id: snEl && snEl.value ? snEl.value : 'Producto principal', quantity: 1, item_price: price }]
-        }
+        var price = mpEl ? parseFloat(mpEl.value) || 0 : 197
+        var data = { content_type: 'product', num_items: 1, currency: 'MXN', value: price }
+        data.contents = [{ id: snEl && snEl.value ? snEl.value : 'Recetario Medicina Natural', quantity: 1, item_price: price }]
         window.metaTrackInitiateCheckout(data)
+      } else if (typeof fbq === 'function') {
+        fbq('track', 'InitiateCheckout', {
+          content_name: 'Recetario Medicina Natural',
+          value: 197,
+          currency: 'MXN'
+        })
       }
-      var url = new URL(window.location.href)
-      var qs = []
-      var sid = url.searchParams.get('store_id')
-      var country = url.searchParams.get('country')
-      if (sid) qs.push('store_id=' + encodeURIComponent(sid))
-      if (country) qs.push('country=' + encodeURIComponent(country))
-      // UTMs + click ids: tracking.js ya los pega en los <a href>, pero acá la
-      // URL se arma a mano, así que hay que arrastrarlos igual — si no, navegar
-      // por JS pierde la atribución de la campaña. Copia del mismo helper que
-      // usan cart.js y pre-downsell.js (tracking.js va inline y no exporta).
+
+      var xpagUrl = new URL('https://xpag.global/pay/xMz61Iki')
+      var urlParams = new URLSearchParams(window.location.search)
+      urlParams.forEach(function (val, key) {
+        if (val) xpagUrl.searchParams.set(key, val)
+      })
+
       try {
         var st = JSON.parse(sessionStorage.getItem('impultienda_utm') || '{}') || {}
-        var tk = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'utm_adset', 'utm_id']
+        var tk = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'utm_adset', 'utm_id', 'fbclid', 'gclid', 'ttclid', 'msclkid', 'twclid', 'xcod', 'sck', 'src']
         for (var ti = 0; ti < tk.length; ti++) {
-          var tv = st[tk[ti]] || url.searchParams.get(tk[ti])
-          if (!tv) continue
-          tv = String(tv).split('::')[0].trim().slice(0, 100)
-          if (tv) qs.push(tk[ti] + '=' + encodeURIComponent(tv))
+          if (!xpagUrl.searchParams.has(tk[ti])) {
+            var tv = st[tk[ti]]
+            if (tv) {
+              tv = String(tv).split('::')[0].trim().slice(0, 512)
+              if (tv) xpagUrl.searchParams.set(tk[ti], tv)
+            }
+          }
         }
-        // Los click ids van CRUDOS y con la URL primero: son tokens opacos de
-        // ~200 chars y truncarlos rompe la cookie _fbc que rearma el pixel en
-        // el checkout (Meta: 'valor de fbclid modificado', 23-ago-2026).
-        var ckk = ['fbclid', 'gclid', 'ttclid', 'msclkid', 'twclid', 'xcod', 'sck']
-        for (var ci = 0; ci < ckk.length; ci++) {
-          var cvv = url.searchParams.get(ckk[ci]) || st[ckk[ci]]
-          if (!cvv) continue
-          cvv = String(cvv).trim().slice(0, 512)
-          if (cvv) qs.push(ckk[ci] + '=' + encodeURIComponent(cvv))
-        }
-        // Upsells tildados en la landing de HTML propio (upsellPicker.js) →
-        // el checkout los preselecciona (checkout.js lee ?upsells=).
-        var us = JSON.parse(sessionStorage.getItem('impultienda_upsells') || '[]')
-        if (Array.isArray(us) && us.length) qs.push('upsells=' + encodeURIComponent(us.join(',')))
       } catch (e) { /* storage bloqueado: seguimos sin UTMs */ }
-      window.location.href = './pages/checkout.html' + (qs.length ? '?' + qs.join('&') : '')
+
+      window.location.href = xpagUrl.toString()
     })
   </script>  <script>
     // Resizes <CustomSection /> iframes to match their content height.
